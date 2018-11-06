@@ -17,6 +17,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileSystem;
@@ -57,6 +58,8 @@ public class SpringBootUtil {
     public static final String SERVER_SSL_KEY_ALIAS = "server.ssl.key-alias";
 
     private static final String APPLICATION_PROPERTIES_FILE = "application.properties";
+    private static final String RESOURCES_DIRECTORY_PATH = "src/main/resources";
+    private static final String SOURCE_MAIN_DIR_PATH = "src/main";
     
     private static final String SPRING_WEBMVC = "spring-webmvc";
     private static final String SPRING_WEBSOCKET = "spring-websocket";
@@ -151,14 +154,14 @@ public class SpringBootUtil {
         }
     }
 
-    public static Properties getSpringBootServerProperties(String springBootProjectResources) throws IOException {
+    public static Properties getSpringBootServerProperties() throws IOException {
         Properties serverProperties = new Properties();
         Properties allProperties = new Properties();
         InputStream input = null;
 
         try {
 
-            File applicationPropertiesFile = new File(springBootProjectResources, APPLICATION_PROPERTIES_FILE);
+            File applicationPropertiesFile = new File(RESOURCES_DIRECTORY_PATH, APPLICATION_PROPERTIES_FILE);
 
             if (applicationPropertiesFile.exists()) {
                 input = new FileInputStream(applicationPropertiesFile.getAbsolutePath());
@@ -208,7 +211,8 @@ public class SpringBootUtil {
 
     public static List<String> getLibertyFeaturesForSpringBoot(String springBootVersion,
             List<String> springFrameworkDependencies, BoostLoggerI logger) {
-        List<String> featuresToAdd = new ArrayList<String>();
+        
+    	List<String> featuresToAdd = new ArrayList<String>();
 
         if (springBootVersion != null) {
             String springBootFeature = null;
@@ -233,6 +237,11 @@ public class SpringBootUtil {
             logger.info(
                     "The springBoot feature was not added to the Open Liberty server because no spring-boot-starter dependencies were found.");
         }
+        
+        // Check for JSP files
+		if (findJspFiles(logger, SOURCE_MAIN_DIR_PATH)){
+			featuresToAdd.add(JSP_23);
+		}
 
         // Add any other Liberty features needed depending on the spring framework dependencies defined
         for (String dependency : springFrameworkDependencies) {
@@ -247,6 +256,39 @@ public class SpringBootUtil {
 
         return featuresToAdd;
     }
+    
+    
+    private static boolean findJspFiles(BoostLoggerI logger, String baseDir) {
+    	
+    	logger.info("Base Dir is : " + baseDir);
+	    File[] files = new File(baseDir).listFiles();
+	    
+	    for (File file : files) {
+	    	
+	    	String lowercaseName = file.getName().toLowerCase();
+			logger.info("Found file name: " + lowercaseName);
+			
+			if (lowercaseName.endsWith(".jsp") 
+					|| lowercaseName.endsWith(".jspf") 
+					|| lowercaseName.endsWith(".jspx") 
+					|| lowercaseName.endsWith(".jsv") 
+					|| lowercaseName.endsWith(".jspw")) {
+				
+				return true;
+	        }
+			
+			if (file.isDirectory()) {
+		    	
+	        	if (findJspFiles(logger, file.getAbsolutePath())) {
+	        		
+	        		return true;
+	        	}
+	        
+			}     
+	    }
+		
+		return false;
+    }
 
     /**
      * Generate Liberty server configuration files based on the Spring Boot application configuration.
@@ -260,21 +302,21 @@ public class SpringBootUtil {
      * @throws IOException 
      * @throws TransformerException 
      */
-    public static void generateLibertyServerConfig(String springBootProjectResources, String libertyServerPath, String springBootVersion, List<String> springBootStarters, BoostLoggerI logger) throws ParserConfigurationException, IOException, TransformerException {
+    public static void generateLibertyServerConfig(String libertyServerPath, String springBootVersion, List<String> springBootStarters, BoostLoggerI logger) throws ParserConfigurationException, IOException, TransformerException {
         
         logger.info("Generating Liberty server configuration");
         
         // Generate Liberty configuration
         LibertyServerConfigGenerator serverConfig = new LibertyServerConfigGenerator(libertyServerPath);
     
-        // Find and add appropriate springBoot features
+        // Find and add appropriate liberty features based on spring framework dependencies
         List<String> featuresNeededForSpringBootApp = getLibertyFeaturesForSpringBoot(springBootVersion,
                 springBootStarters, logger);
         
         serverConfig.addFeatures(featuresNeededForSpringBootApp);
         
-         // Get Spring Boot server properties
-        Properties springBootServerProps = getSpringBootServerProperties(springBootProjectResources);
+        // Get Spring Boot server properties
+        Properties springBootServerProps = getSpringBootServerProperties();
         
         // Configure SSL and endpoints
         if (springBootServerProps.containsKey(SpringBootUtil.SERVER_SSL_KEYSTORE)) {
@@ -322,7 +364,7 @@ public class SpringBootUtil {
                 springBootServerProps.put(SpringBootUtil.SERVER_SSL_KEYSTORE, keystoreFile);
                 
                 // Copy keystore to Liberty
-                Path springBootKeystorePath = Paths.get(springBootProjectResources, keystoreFile);
+                Path springBootKeystorePath = new File(RESOURCES_DIRECTORY_PATH, keystoreFile).toPath();
                 Path libertyKeystorePath = Paths.get(libertyServerPath + "/resources/security/" + keystoreFile);
                 Path libertySecurityPath = Paths.get(libertyServerPath + "/resources/security");
                 
@@ -332,7 +374,9 @@ public class SpringBootUtil {
             
         } else {
             serverConfig.addHttpEndpoint(makeVariable(SpringBootUtil.SERVER_ADDRESS), makeVariable(SpringBootUtil.SERVER_PORT), null);
-         }
+        }
+        
+        
         
         // Add properties to bootstrap properties
         serverConfig.addBootstrapProperties(springBootServerProps);

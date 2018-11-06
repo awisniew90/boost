@@ -147,7 +147,7 @@ public class LibertyPackageMojo extends AbstractLibertyMojo {
             List<String> springFrameworkDependencies = MavenProjectUtil.getSpringFrameworkDependencies(project);
             
             // Generate server config
-            SpringBootUtil.generateLibertyServerConfig(projectBuildDir + "/classes", libertyServerPath, springBootVersion, springFrameworkDependencies, BoostLogger.getInstance());
+            SpringBootUtil.generateLibertyServerConfig(libertyServerPath, springBootVersion, springFrameworkDependencies, BoostLogger.getInstance());
         
         } catch (Exception e) {
             throw new MojoExecutionException("Unable to generate server configuration for the Liberty server.", e);

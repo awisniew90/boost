@@ -36,5 +36,6 @@ public interface ConfigConstants {
     public String SERVLET_40 = "servlet-4.0";
 
     public String WEBSOCKET_11 = "websocket-1.1";
+    public String JSP_23 = "jsp-2.3";
     public String TRANSPORT_SECURITY_10 = "transportSecurity-1.0";
 }
