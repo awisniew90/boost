@@ -14,7 +14,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -117,9 +116,13 @@ public class LibertyPackageMojo extends AbstractLibertyMojo {
                 addSpringBootVersionToManifest(springBootVersion);
             }
         } else { // Dealing with an EE based app
-
+        	
             // Get booster dependencies from project
             Map<String, String> dependencies = MavenProjectUtil.getAllDependencies(project, BoostLogger.getInstance());
+            
+            // Since the JDBC booster will be based on the Java compiler target version, update the dependency entry. 
+            String javaCompilerTargetVersion = MavenProjectUtil.getJavaCompilerTargetVersion(project, BoostLogger.getInstance());
+            dependencies.replace("jdbc", javaCompilerTargetVersion);
             
             this.boosterPackConfigurators = LibertyBoosterUtil.getBoosterPackConfigurators(dependencies, BoostLogger.getInstance());
 

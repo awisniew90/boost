@@ -42,18 +42,6 @@ public class LibertyBoosterUtil {
     public static String BOOSTER_MPRESTCLIENT = "io.openliberty.boosters:mpRestClient";
     public static String BOOSTER_OPENTRACING = "io.openliberty.boosters:mpOpenTracing";
 
-    // protected String libertyServerPath;
-    // protected List<BoosterPackConfigurator> boosterPackConfigurators;
-    // protected BoostLoggerI logger;
-
-    /*
-     * public LibertyBoosterUtil(String libertyServerPath, Map<String, String>
-     * dependencies, BoostLoggerI logger) { this.libertyServerPath =
-     * libertyServerPath; this.logger = logger;
-     * 
-     * this.boosterPackConfigurators =
-     * getBoosterPackConfigurators(dependencies); }
-     */
     /**
      * take a list of pom boost dependency strings and map to liberty features
      * for config. return a list of feature configuration objects for each found

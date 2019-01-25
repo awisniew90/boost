@@ -12,10 +12,13 @@ package io.openliberty.boost.maven.utils;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 import org.apache.maven.artifact.Artifact;
+import org.apache.maven.model.Plugin;
 import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.util.xml.Xpp3Dom;
 
 public class MavenProjectUtil {
 
@@ -51,4 +54,39 @@ public class MavenProjectUtil {
         return dependencies;
     }
 
+    public static String getJavaCompilerTargetVersion(MavenProject project, BoostLogger logger) {
+
+        Properties mavenProperties = project.getProperties();
+
+        for (Map.Entry<Object, Object> property : mavenProperties.entrySet()) {
+
+            String propertyKey = property.getKey().toString();
+            String propertyValue = property.getValue().toString();
+
+            logger.debug("Found Maven Property: " + propertyKey + "=" + propertyValue);
+
+            if (propertyKey.equals("maven.compiler.target") || propertyKey.equals("maven.compiler.release")) {
+                return propertyValue;
+            }
+        }
+
+        Plugin compilerPlugin = project.getPlugin("maven-compiler-plugin");
+        Xpp3Dom config = (Xpp3Dom) compilerPlugin.getConfiguration();
+
+        if (config != null) {
+
+            Xpp3Dom release = config.getChild("release");
+            if (release != null) {
+                return release.getValue();
+            }
+
+            Xpp3Dom target = config.getChild("target");
+            if (target != null) {
+                return target.getValue();
+            }
+        }
+
+        return "1.6";
+
+    }
 }

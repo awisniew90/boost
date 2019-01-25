@@ -37,11 +37,15 @@ public class JDBCBoosterPackConfigurator extends BoosterPackConfigurator {
 
     public JDBCBoosterPackConfigurator(String version, Properties boostConfigProperties, String configuredDatabaseDep) {
     	
-    	// Set the Liberty feature based on the booster version
-    	if (version.equals(EE_7_VERSION)) {
+    	
+    	if (version.equals("1.6")) {
+            this.libertyFeature = JDBC_40;
+        } else if (version.equals("1.7")) {
             this.libertyFeature = JDBC_41;
-        } else if (version.equals(EE_8_VERSION)) {
-            this.libertyFeature = JDBC_42;
+        } else if (version.equals("1.8") || version.equals("9") || version.equals("10")) {
+        	this.libertyFeature = JDBC_42;
+        } else if (version.equals("11")) {
+        	this.libertyFeature = JDBC_43;
         }
     	
     	if (configuredDatabaseDep == null) {
