@@ -26,48 +26,47 @@ import java.util.Properties;
 
 @BoosterCoordinates(AbstractBoosterConfig.BOOSTERS_GROUP_ID + ":jdbc")
 public class JDBCBoosterConfig extends AbstractBoosterConfig {
-
-	public static String DERBY = "derby";
-	public static String DB2 = "db2";
-	public static String MYSQL = "mysql";
 	
 	public static String DERBY_DRIVER_CLASS_NAME = "org.apache.derby.jdbc.EmbeddedDriver";
 	public static String DB2_DRIVER_CLASS_NAME = "com.ibm.db2.jcc.DB2Driver";
 	public static String MYSQL_DRIVER_CLASS_NAME = "com.mysql.cj.jdbc.Driver";
 	
-    public static String DERBY_DEPENDENCY = "org.apache.derby:derby";
-    public static String DB2_DEPENDENCY = "com.ibm.db2.jcc:db2jcc";
-    public static String MYSQL_DEPENDENCY = "mysql:mysql-connector-java";
+    public static String DERBY_GROUP_ID = "org.apache.derby";
+    public static String DERBY_ARTIFACT_ID = "derby";
+    public static String DB2_GROUP_ID = "com.ibm.db2.jcc";
+    public static String DB2_ARTIFACT_ID = "db2jcc";
+    public static String MYSQL_GROUP_ID = "mysql";
+    public static String MYSQL_ARTIFACT_ID = "mysql-connector-java";
 
-    private static String DERBY_DEFAULT = "org.apache.derby:derby:10.14.2.0";
+    private static String DERBY_DEFAULT_VERSION = "10.14.2.0";
 
     private Properties boostConfigProperties;
     private String dependency;
-    private String productName;
+    private String jdbcDriverJar;
 
     public JDBCBoosterConfig(Map<String, String> dependencies, BoostLoggerI logger) throws BoostException {
 
     	boostConfigProperties = BoostProperties.getConfiguredBoostProperties(logger);
     	
         // Determine JDBC driver dependency
-        if (dependencies.containsKey(JDBCBoosterConfig.DERBY_DEPENDENCY)) {
-            String derbyVersion = dependencies.get(JDBCBoosterConfig.DERBY_DEPENDENCY);
-            this.dependency = JDBCBoosterConfig.DERBY_DEPENDENCY + ":" + derbyVersion;
-            this.productName = DERBY;
+        if (dependencies.containsKey(DERBY_GROUP_ID + ":" + DERBY_ARTIFACT_ID)) {
+            String derbyVersion = dependencies.get(DERBY_GROUP_ID + ":" + DERBY_ARTIFACT_ID);
+            this.dependency = DERBY_GROUP_ID + ":" + DERBY_ARTIFACT_ID + ":" + derbyVersion;
+            this.jdbcDriverJar = DERBY_ARTIFACT_ID + "-" + derbyVersion;
 
-        } else if (dependencies.containsKey(JDBCBoosterConfig.DB2_DEPENDENCY)) {
-            String db2Version = dependencies.get(JDBCBoosterConfig.DB2_DEPENDENCY);
-            this.dependency = JDBCBoosterConfig.DB2_DEPENDENCY + ":" + db2Version;
-            this.productName = DB2;
+        } else if (dependencies.containsKey(DB2_GROUP_ID + ":" + DB2_ARTIFACT_ID)) {
+            String db2Version = dependencies.get(DB2_GROUP_ID + ":" + DB2_ARTIFACT_ID);
+            this.dependency = DB2_GROUP_ID + ":" + DB2_ARTIFACT_ID + ":" + db2Version;
+            this.jdbcDriverJar = DB2_ARTIFACT_ID + "-" + db2Version;
 
-        } else if (dependencies.containsKey(JDBCBoosterConfig.MYSQL_DEPENDENCY)) {
-            String mysqlVersion = dependencies.get(JDBCBoosterConfig.MYSQL_DEPENDENCY);
-            this.dependency = JDBCBoosterConfig.MYSQL_DEPENDENCY + ":" + mysqlVersion;
-            this.productName = MYSQL;
+        } else if (dependencies.containsKey(MYSQL_GROUP_ID + ":" + MYSQL_ARTIFACT_ID)) {
+            String mysqlVersion = dependencies.get(MYSQL_GROUP_ID + ":" + MYSQL_ARTIFACT_ID);
+            this.dependency = MYSQL_GROUP_ID + ":" + MYSQL_ARTIFACT_ID + ":" + mysqlVersion;
+            this.jdbcDriverJar = MYSQL_ARTIFACT_ID + "-" + mysqlVersion;
             
         } else {
-        	this.dependency = DERBY_DEFAULT;
-        	this.productName = DERBY;
+        	this.dependency = DERBY_GROUP_ID + ":" + DERBY_ARTIFACT_ID + ":" + DERBY_DEFAULT_VERSION;
+        	this.jdbcDriverJar = DERBY_ARTIFACT_ID + "-" + DERBY_DEFAULT_VERSION;
         }
     }
 
@@ -89,14 +88,14 @@ public class JDBCBoosterConfig extends AbstractBoosterConfig {
         	!datasourceProperties.containsKey(BoostProperties.DATASOURCE_PORT_NUMBER)) {
         	
         	// No db connection properties have been specified. Set defaults.
-        	if (productName.equals(DERBY)) {
+        	if (dependency.contains(DERBY_GROUP_ID)) {
         		datasourceProperties.put(BoostProperties.DATASOURCE_DATABASE_NAME, DERBY_DB);
 		        datasourceProperties.put(BoostProperties.DATASOURCE_CREATE_DATABASE, "create");
 		        
-        	} else if (productName.equals(DB2)) {
+        	} else if (dependency.contains(DB2_GROUP_ID)) {
         		datasourceProperties.put(BoostProperties.DATASOURCE_URL, "jdbc:db2://localhost:" + DB2_DEFAULT_PORT_NUMBER);
         		
-        	} else if (productName.equals(MYSQL)) {
+        	} else if (dependency.contains(MYSQL_GROUP_ID)) {
         		datasourceProperties.put(BoostProperties.DATASOURCE_URL, "jdbc:mysql://localhost:" + MYSQL_DEFAULT_PORT_NUMBER);
         	}
         }
@@ -111,7 +110,7 @@ public class JDBCBoosterConfig extends AbstractBoosterConfig {
         return deps;
     }
 
-    public String getProductName() {
-        return productName;
+    public String getJdbcDriver() {
+        return jdbcDriverJar;
     }
 }

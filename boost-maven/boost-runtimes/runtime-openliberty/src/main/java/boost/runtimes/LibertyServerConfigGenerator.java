@@ -102,7 +102,7 @@ public class LibertyServerConfigGenerator implements ServerConfigGenerator {
 
     public void addServerConfig(AbstractBoosterConfig boosterConfig) throws Exception {
         if (boosterConfig instanceof JDBCBoosterConfig) {
-            addDataSource(((JDBCBoosterConfig)boosterConfig).getProductName(), ((JDBCBoosterConfig)boosterConfig).getDatasourceProperties());
+            addDataSource(((JDBCBoosterConfig) boosterConfig).getJdbcDriver(), ((JDBCBoosterConfig) boosterConfig).getDatasourceProperties());
         }
     }
 
@@ -295,19 +295,15 @@ public class LibertyServerConfigGenerator implements ServerConfigGenerator {
     }
 
     @Override
-    public void addDataSource(String productName, Properties serverProperties) throws Exception {
-
-        String driverJar = null;
+    public void addDataSource(String jdbcDriverJar, Properties serverProperties) throws Exception {
+    	
         String datasourcePropertiesElement = null;
 
-        if (productName.equals(JDBCBoosterConfig.DERBY)) {
-            driverJar = DERBY_JAR;
+        if (jdbcDriverJar.contains(JDBCBoosterConfig.DERBY_ARTIFACT_ID)) {
             datasourcePropertiesElement = PROPERTIES_DERBY_EMBEDDED;
-        } else if (productName.equals(JDBCBoosterConfig.DB2)) {
-            driverJar = DB2_JAR;
+        } else if (jdbcDriverJar.contains(JDBCBoosterConfig.DB2_ARTIFACT_ID)) {
             datasourcePropertiesElement = PROPERTIES_DB2_JCC;
-        } else if (productName.equals(JDBCBoosterConfig.MYSQL)) {
-            driverJar = MYSQL_JAR;
+        } else if (jdbcDriverJar.contains(JDBCBoosterConfig.MYSQL_ARTIFACT_ID)) {
             datasourcePropertiesElement = PROPERTIES;
         }
 
@@ -326,7 +322,7 @@ public class LibertyServerConfigGenerator implements ServerConfigGenerator {
         lib.setAttribute("id", JDBC_LIBRARY_1);
         Element fileLoc = serverXml.createElement(FILESET);
         fileLoc.setAttribute("dir", RESOURCES);
-        fileLoc.setAttribute("includes", driverJar);
+        fileLoc.setAttribute("includes", jdbcDriverJar + ".jar");
         lib.appendChild(fileLoc);
         serverRoot.appendChild(lib);
 

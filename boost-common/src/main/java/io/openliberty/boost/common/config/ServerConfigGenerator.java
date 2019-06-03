@@ -1,5 +1,6 @@
 package io.openliberty.boost.common.config;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.Properties;
 
@@ -16,9 +17,10 @@ public interface ServerConfigGenerator {
 	/**
 	 * Add the necessary server configuration 
 	 * to run this application
+	 * @throws Exception 
 	 * 
 	 */
-	public void addApplication(String appName);
+	public void addApplication(String appName) throws Exception;
 	
 	/**
 	 * Configure the server with the specified keystore configuration

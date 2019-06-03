@@ -220,7 +220,7 @@ public class TomeeServerConfigGenerator implements ServerConfigGenerator {
     }
 
     @Override
-    public void addDataSource(String productName, Properties boostDbProperties) throws Exception {
+    public void addDataSource(String jdbcDriverJar, Properties boostDbProperties) throws Exception {
 
         // Read tomee.xml
         File tomeeXml = new File(configPath + "/" + TOMEE_XML);
