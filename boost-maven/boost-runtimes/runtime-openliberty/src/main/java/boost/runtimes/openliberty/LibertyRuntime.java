@@ -20,9 +20,20 @@ import static org.twdata.maven.mojoexecutor.MojoExecutor.name;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.plugin;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.version;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardWatchEventKinds;
+import java.nio.file.WatchEvent;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -58,7 +69,7 @@ public class LibertyRuntime implements RuntimeI {
 
     private String libertyMavenPluginGroupId = "net.wasdev.wlp.maven.plugins";
     private String libertyMavenPluginArtifactId = "liberty-maven-plugin";
-    private String libertyMavenPluginVersion = "2.6.3";
+    private String libertyMavenPluginVersion = "3.1.M1-SNAPSHOT";
 
     public LibertyRuntime() {
         this.boosterConfigs = null;
@@ -76,6 +87,11 @@ public class LibertyRuntime implements RuntimeI {
         this.projectBuildDir = project.getBuild().getDirectory();
         this.libertyServerPath = projectBuildDir + "/liberty/wlp/usr/servers/" + serverName;
         this.mavenDepPlugin = runtimeParams.getMavenDepPlugin();
+        
+
+    	String javaCompilerTargetVersion = MavenProjectUtil.getJavaCompilerTargetVersion(project);
+        System.setProperty(BoostProperties.INTERNAL_COMPILER_TARGET, javaCompilerTargetVersion);
+        
     }
 
     private Plugin getPlugin() throws MojoExecutionException {
@@ -85,8 +101,6 @@ public class LibertyRuntime implements RuntimeI {
 
     @Override
     public void doPackage() throws BoostException {
-        String javaCompilerTargetVersion = MavenProjectUtil.getJavaCompilerTargetVersion(project);
-        System.setProperty(BoostProperties.INTERNAL_COMPILER_TARGET, javaCompilerTargetVersion);
         try {
             packageLiberty(boosterConfigs);
         } catch (MojoExecutionException e) {
@@ -97,10 +111,11 @@ public class LibertyRuntime implements RuntimeI {
     private void packageLiberty(List<AbstractBoosterConfig> boosterConfigs) throws MojoExecutionException {
         createLibertyServer();
 
-        // targeting a liberty install
-        copyBoosterDependencies(boosterConfigs);
-
-        generateServerConfig(boosterConfigs);
+        try {
+			generateServerConfig(libertyServerPath + "/resources", libertyServerPath, boosterConfigs);
+		} catch (BoostException e) {
+			throw new MojoExecutionException(e.getMessage());
+		}
 
         installMissingFeatures();
         // we install the app now, after server.xml is configured. This is
@@ -129,7 +144,7 @@ public class LibertyRuntime implements RuntimeI {
      * @throws MojoExecutionException
      *
      */
-    private void copyBoosterDependencies(List<AbstractBoosterConfig> boosterConfigs) throws MojoExecutionException {
+    private void copyBoosterDependencies(String copyTo, List<AbstractBoosterConfig> boosterConfigs) throws MojoExecutionException {
         List<String> dependenciesToCopy = BoosterConfigurator.getDependenciesToCopy(boosterConfigs,
                 BoostLogger.getInstance());
 
@@ -138,7 +153,7 @@ public class LibertyRuntime implements RuntimeI {
             String[] dependencyInfo = dep.split(":");
 
             executeMojo(mavenDepPlugin, goal("copy"),
-                    configuration(element(name("outputDirectory"), libertyServerPath + "/resources"),
+                    configuration(element(name("outputDirectory"), copyTo),
                             element(name("artifactItems"),
                                     element(name("artifactItem"), element(name("groupId"), dependencyInfo[0]),
                                             element(name("artifactId"), dependencyInfo[1]),
@@ -147,19 +162,18 @@ public class LibertyRuntime implements RuntimeI {
         }
     }
 
-    /**
-     * Generate config for the Liberty server based on the Maven project.
-     * 
-     * @throws MojoExecutionException
-     */
-    private void generateServerConfig(List<AbstractBoosterConfig> boosterConfigs) throws MojoExecutionException {
+    @Override
+    public void generateServerConfig(String configPath, String resourcesDir, List<AbstractBoosterConfig> boosterConfigs) throws BoostException {
 
         try {
+        	// Copy dependency resources 
+        	copyBoosterDependencies(resourcesDir, boosterConfigs);
+        	
             // Generate server config
-            generateLibertyServerConfig(boosterConfigs);
+            generateLibertyServerConfig(configPath, resourcesDir, boosterConfigs);
 
         } catch (Exception e) {
-            throw new MojoExecutionException("Unable to generate server configuration for the Liberty server.", e);
+            throw new BoostException("Unable to generate server configuration for the Liberty server.", e);
         }
     }
 
@@ -189,10 +203,10 @@ public class LibertyRuntime implements RuntimeI {
      * @param boosterConfigurators
      * @throws Exception
      */
-    private void generateLibertyServerConfig(List<AbstractBoosterConfig> boosterConfigurators) throws Exception {
+    private void generateLibertyServerConfig(String configPath, String resourcesDir, List<AbstractBoosterConfig> boosterConfigurators) throws Exception {
 
         List<String> warNames = getWarNames();
-        LibertyServerConfigGenerator libertyConfig = new LibertyServerConfigGenerator(libertyServerPath,
+        LibertyServerConfigGenerator libertyConfig = new LibertyServerConfigGenerator(configPath, resourcesDir, libertyServerPath,
                 BoostLogger.getInstance());
 
         // Add default http endpoint configuration
@@ -223,6 +237,9 @@ public class LibertyRuntime implements RuntimeI {
             if (configurator instanceof LibertyBoosterI) {
                 ((LibertyBoosterI) configurator).addServerConfig(libertyConfig);
                 libertyConfig.addFeature(((LibertyBoosterI) configurator).getFeature());
+                BoostLogger.getInstance().info("Feature: " + ((LibertyBoosterI) configurator).getFeature());
+            } else {
+            	BoostLogger.getInstance().info("Not a liberty booster");
             }
         }
 
@@ -327,5 +344,19 @@ public class LibertyRuntime implements RuntimeI {
             throw new BoostException("Error stopping Liberty server", e);
         }
     }
-
+    
+    @Override
+    public void doDev() throws BoostException {
+        try {
+        	// Call liberty:dev
+            executeMojo(getPlugin(), goal("dev"),
+                    configuration(element(name("serverName"), serverName), 
+                    		element(name("configFile"), projectBuildDir + "/boostConfig/server.xml"),
+                    		element(name("bootstrapPropertiesFile"), projectBuildDir + "/boostConfig/bootstrap.properties"),
+                    		getRuntimeArtifactElement()), env);
+            
+        } catch (MojoExecutionException e) {
+            throw new BoostException("Error starting dev mode", e);
+        }
+    }
 }

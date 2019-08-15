@@ -54,14 +54,14 @@ public class LibertyJDBCBoosterConfig extends JDBCBoosterConfig implements Liber
     public void addServerConfig(LibertyServerConfigGenerator libertyServerConfigGenerator) throws BoostException {
         try {
             addDataSource(getProductName(), getDatasourceProperties(), libertyServerConfigGenerator,
-                    libertyServerConfigGenerator.getServerXmlDoc());
+                    libertyServerConfigGenerator.getServerXmlDoc(), libertyServerConfigGenerator.getResourcesDir());
         } catch (Exception e) {
             throw new BoostException("Error when configuring JDBC data source.");
         }
     }
 
     private void addDataSource(String productName, Properties serverProperties,
-            LibertyServerConfigGenerator libertyServerConfigGenerator, Document serverXml) throws Exception {
+            LibertyServerConfigGenerator libertyServerConfigGenerator, Document serverXml, String dependencyDir) throws Exception {
 
         String driverJar = null;
         String datasourcePropertiesElement = null;
@@ -91,7 +91,7 @@ public class LibertyJDBCBoosterConfig extends JDBCBoosterConfig implements Liber
         Element lib = serverXml.createElement(LIBRARY);
         lib.setAttribute("id", JDBC_LIBRARY_1);
         Element fileLoc = serverXml.createElement(FILESET);
-        fileLoc.setAttribute("dir", RESOURCES);
+        fileLoc.setAttribute("dir", dependencyDir);
         fileLoc.setAttribute("includes", driverJar);
         lib.appendChild(fileLoc);
         serverRoot.appendChild(lib);

@@ -72,8 +72,8 @@ public class TomeeRuntime implements RuntimeI {
     public void doPackage() throws BoostException {
         try {
             createTomeeServer();
-            configureTomeeServer(boosterConfigs);
-            copyTomeeJarDependencies(boosterConfigs);
+            generateServerConfig(configDir, installDir + "boost", boosterConfigs);
+            
             createUberJar();
         } catch (Exception e) {
             throw new BoostException("Error packaging TomEE server", e);
@@ -88,11 +88,11 @@ public class TomeeRuntime implements RuntimeI {
                 element(name("tomeeVersion"), "8.0.0-M2"), element(name("tomeeClassifier"), "plus")), env);
     }
 
-    /**
-     * Configure the TomEE runtime
-     */
-    private void configureTomeeServer(List<AbstractBoosterConfig> boosterConfigurators) throws Exception {
-        try {
+    @Override
+    public void generateServerConfig(String configDir, String resourcesDir, List<AbstractBoosterConfig> boosterConfigurators) throws BoostException {
+    	try {
+    		copyTomeeJarDependencies(resourcesDir, boosterConfigs);
+    		
             TomeeServerConfigGenerator tomeeConfig = new TomeeServerConfigGenerator(configDir,
                     BoostLogger.getInstance());
             tomeeConfig.addJarsDirToSharedLoader();
@@ -111,7 +111,7 @@ public class TomeeRuntime implements RuntimeI {
                 tomeeConfig.addServerConfig(configurator);
             }
         } catch (Exception e) {
-            throw new MojoExecutionException("Unable to generate server configuration for the Tomee server.", e);
+            throw new BoostException("Unable to generate server configuration for the Tomee server.", e);
         }
     }
 
@@ -122,14 +122,14 @@ public class TomeeRuntime implements RuntimeI {
      * @throws MojoExecutionException
      *
      */
-    private void copyTomeeJarDependencies(List<AbstractBoosterConfig> boosterConfigs) throws MojoExecutionException {
+    private void copyTomeeJarDependencies(String toDir, List<AbstractBoosterConfig> boosterConfigs) throws MojoExecutionException {
         List<String> tomeeDependencyJarsToCopy = BoosterConfigurator.getDependenciesToCopy(boosterConfigs,
                 BoostLogger.getInstance());
         for (String dep : tomeeDependencyJarsToCopy) {
             String[] dependencyInfo = dep.split(":");
 
             executeMojo(mavenDepPlugin, goal("copy"),
-                    configuration(element(name("outputDirectory"), installDir + "boost"),
+                    configuration(element(name("outputDirectory"), toDir),
                             element(name("artifactItems"),
                                     element(name("artifactItem"), element(name("groupId"), dependencyInfo[0]),
                                             element(name("artifactId"), dependencyInfo[1]),
@@ -187,4 +187,9 @@ public class TomeeRuntime implements RuntimeI {
         }
     }
 
+	@Override
+	public void doDev() throws BoostException {
+		BoostLogger.getInstance().warn("This runtime does not support development mode.");
+		
+	}
 }

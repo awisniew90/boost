@@ -55,6 +55,9 @@ public class BoosterConfigurator {
      */
     public static List<AbstractBoosterConfig> getBoosterConfigs(List<File> jars, ClassLoader classLoader,
             Map<String, String> dependencies, BoostLoggerI logger) throws Exception {
+    	
+    	for (String key : dependencies.keySet()) {
+    	}
 
         ClassPool classPool = ClassPool.getDefault();
         classPool.appendClassPath(new LoaderClassPath(classLoader));
@@ -77,12 +80,14 @@ public class BoosterConfigurator {
                 for (CtClass ctClass : runtimeBoosterCtClasses) {
                     if (ctClass.getSuperclass().getName().equals(boosterClass.getName())) {
                         // A runtime specific booster exists
+                    	logger.info("Runtime booster found");
                         Class<?> runtimeBoosterClass = classLoader.loadClass(ctClass.getName());
                         cons = runtimeBoosterClass.getConstructor(Map.class, BoostLoggerI.class);
                     }
                 }
 
                 if (cons == null) {
+                	logger.info("Generic booster found");
                     // We did not find a runtime specific booster class, just instantiate a generic
                     // one
                     cons = boosterClass.getConstructor(Map.class, BoostLoggerI.class);

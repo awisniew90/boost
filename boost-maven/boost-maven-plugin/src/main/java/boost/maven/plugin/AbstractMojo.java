@@ -32,8 +32,9 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.project.ProjectBuilder;
+import org.apache.maven.repository.RepositorySystem;
 import org.codehaus.mojo.pluginsupport.MojoSupport;
-import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.twdata.maven.mojoexecutor.MojoExecutor.ExecutionEnvironment;
@@ -49,7 +50,7 @@ public abstract class AbstractMojo extends MojoSupport {
 
     private static RuntimeI runtime;
     private ClassLoader projectClassLoader;
-    private List<AbstractBoosterConfig> boosterConfigs;
+    protected List<AbstractBoosterConfig> boosterConfigs;
 
     protected String mavenDependencyPluginGroupId = "org.apache.maven.plugins";
     protected String mavenDependencyPluginArtifactId = "maven-dependency-plugin";
@@ -57,7 +58,7 @@ public abstract class AbstractMojo extends MojoSupport {
     @Parameter(defaultValue = "${project.build.directory}", readonly = true)
     protected String projectBuildDir;
 
-    @Parameter(defaultValue = "${project}", readonly = true)
+    @Parameter(defaultValue = "${project}", readonly = false)
     protected MavenProject project;
 
     @Parameter(defaultValue = "${session}", readonly = true)
@@ -73,7 +74,13 @@ public abstract class AbstractMojo extends MojoSupport {
     protected BuildPluginManager pluginManager;
 
     @Component
-    protected RepositorySystem repoSystem;
+	protected RepositorySystem mavenRepoSystem;
+    
+    @Component
+    protected org.eclipse.aether.RepositorySystem repoSystem;
+    
+    @Component
+	protected ProjectBuilder mavenProjectBuilder;
 
     protected Map<String, String> dependencies;
 
@@ -88,6 +95,7 @@ public abstract class AbstractMojo extends MojoSupport {
     @Override
     public void execute() throws MojoExecutionException {
         try {
+            
             // TODO move this into getRuntimeInstance()
             this.dependencies = MavenProjectUtil.getAllDependencies(project, repoSystem, repoSession, remoteRepos,
                     BoostLogger.getInstance());

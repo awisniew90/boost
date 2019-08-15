@@ -23,6 +23,7 @@ import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import boost.common.BoostException;
 import boost.common.BoostLoggerI;
 import net.wasdev.wlp.common.plugins.util.OSUtil;
 
@@ -89,49 +90,54 @@ public class BoostUtil {
         }
     }
 
-    public static String encrypt(String libertyInstallPath, String property, String encryptionType, String encryptionKey, BoostLoggerI logger) throws IOException {
+    public static String encrypt(String libertyInstallPath, String property, String encryptionType, String encryptionKey, BoostLoggerI logger) throws IOException, BoostException {
         //Won't encode the property if it contains the aes flag
         if (!isEncoded(property)) {
-            Runtime rt = Runtime.getRuntime();
-            List<String> commands = new ArrayList<String>();
-
-            commands.add(getSecurityUtilCmd(libertyInstallPath));
-            commands.add("encode");
-            commands.add(property);
-
-            if(encryptionType != null && !encryptionType.equals("")) {
-                commands.add("--encoding=" + encryptionType);
-            } else {
-                commands.add("--encoding=aes");
-            }
-
-            if(encryptionKey != null && !encryptionKey.equals("")) {
-                commands.add("--key=" + encryptionKey);
-            }
-
-            Process proc = rt.exec(commands.toArray(new String[0]));
-
-            BufferedReader stdInput = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-
-            BufferedReader stdError = new BufferedReader(new InputStreamReader(proc.getErrorStream()));
-
-            String s = null;
-
-            StringBuilder out = new StringBuilder();
-            while ((s = stdInput.readLine()) != null) {
-                out.append(s);
-            }
-
-            StringBuilder error = new StringBuilder();
-            while ((s = stdError.readLine()) != null) {
-                error.append(s + "\n");
-            }
-
-            if (error.length() != 0) {
-                throw new IOException("Password encryption failed: " + error);
-            }
-
-            return out.toString();
+        	
+        	if (libertyInstallPath != null) {
+	            Runtime rt = Runtime.getRuntime();
+	            List<String> commands = new ArrayList<String>();
+	
+	            commands.add(getSecurityUtilCmd(libertyInstallPath));
+	            commands.add("encode");
+	            commands.add(property);
+	
+	            if(encryptionType != null && !encryptionType.equals("")) {
+	                commands.add("--encoding=" + encryptionType);
+	            } else {
+	                commands.add("--encoding=aes");
+	            }
+	
+	            if(encryptionKey != null && !encryptionKey.equals("")) {
+	                commands.add("--key=" + encryptionKey);
+	            }
+	
+	            Process proc = rt.exec(commands.toArray(new String[0]));
+	
+	            BufferedReader stdInput = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+	
+	            BufferedReader stdError = new BufferedReader(new InputStreamReader(proc.getErrorStream()));
+	
+	            String s = null;
+	
+	            StringBuilder out = new StringBuilder();
+	            while ((s = stdInput.readLine()) != null) {
+	                out.append(s);
+	            }
+	
+	            StringBuilder error = new StringBuilder();
+	            while ((s = stdError.readLine()) != null) {
+	                error.append(s + "\n");
+	            }
+	
+	            if (error.length() != 0) {
+	                throw new IOException("Password encryption failed: " + error);
+	            }
+	
+	            return out.toString();
+        	} else {
+        		throw new BoostException("No Liberty install path provided");
+        	}
         }
         return property;
     }

@@ -35,9 +35,11 @@ import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import boost.common.BoostException;
 import boost.common.BoostLoggerI;
 import boost.common.config.BoostProperties;
 import boost.common.utils.BoostUtil;
+import boost.maven.utils.BoostLogger;
 
 /**
  * Create a Liberty server.xml
@@ -45,8 +47,9 @@ import boost.common.utils.BoostUtil;
  */
 public class LibertyServerConfigGenerator {
 
-    private final String serverPath;
+    private final String configDir;
     private final String libertyInstallPath;
+    private final String resourcesDir;
 
     private final BoostLoggerI logger;
 
@@ -61,12 +64,14 @@ public class LibertyServerConfigGenerator {
 
     private final Properties boostConfigProperties;
 
-    public LibertyServerConfigGenerator(String serverPath, BoostLoggerI logger) throws ParserConfigurationException {
+    public LibertyServerConfigGenerator(String configDir, String resourcesDir, String libertyInstallPath, BoostLoggerI logger) throws ParserConfigurationException {
 
-        this.serverPath = serverPath;
-        this.libertyInstallPath = serverPath + "/../../.."; // Three directories
-                                                            // back from
-                                                            // 'wlp/usr/servers/BoostServer'
+        this.configDir = configDir;
+        
+        this.libertyInstallPath = libertyInstallPath;
+        
+        this.resourcesDir = resourcesDir;
+        
         this.logger = logger;
 
         boostConfigProperties = BoostProperties.getConfiguredBoostProperties(logger);
@@ -136,7 +141,7 @@ public class LibertyServerConfigGenerator {
         transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
         transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
         DOMSource source = new DOMSource(serverXml);
-        StreamResult result = new StreamResult(new File(serverPath + "/server.xml"));
+        StreamResult result = new StreamResult(new File(configDir + "/server.xml"));
         transformer.transform(source, result);
 
         // Generate bootstrap.properties
@@ -144,7 +149,7 @@ public class LibertyServerConfigGenerator {
 
             OutputStream output = null;
             try {
-                output = new FileOutputStream(serverPath + "/bootstrap.properties");
+                output = new FileOutputStream(configDir + "/bootstrap.properties");
                 bootstrapProperties.store(output, null);
             } finally {
                 if (output != null) {
@@ -160,7 +165,7 @@ public class LibertyServerConfigGenerator {
         }
     }
 
-    public void addBootstrapProperties(Properties properties) throws IOException {
+    public void addBootstrapProperties(Properties properties) throws IOException, BoostException {
 
         if (properties != null) {
             for (String key : properties.stringPropertyNames()) {
@@ -171,7 +176,7 @@ public class LibertyServerConfigGenerator {
         }
     }
 
-    private void addBoostrapProperty(String key, String value) throws IOException {
+    private void addBoostrapProperty(String key, String value) throws IOException, BoostException {
 
         // Using this to hold the properties we want to encrypt and the type of
         // encryption we want to use
@@ -240,5 +245,9 @@ public class LibertyServerConfigGenerator {
 
     public Document getServerXmlDoc() {
         return serverXml;
+    }
+    
+    public String getResourcesDir() {
+    	return resourcesDir;
     }
 }

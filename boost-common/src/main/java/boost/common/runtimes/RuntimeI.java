@@ -10,7 +10,10 @@
  *******************************************************************************/
 package boost.common.runtimes;
 
+import java.util.List;
+
 import boost.common.BoostException;
+import boost.common.boosters.AbstractBoosterConfig;
 
 public abstract interface RuntimeI {
     
@@ -23,5 +26,9 @@ public abstract interface RuntimeI {
     public void doStart(boolean clean, int verifyTimeout, int serverStartTimeout) throws BoostException;
     
     public void doStop() throws BoostException;
+    
+    public void doDev() throws BoostException;
+
+	public void generateServerConfig(String configDir, String resourcesDir, List<AbstractBoosterConfig> boosterConfigs) throws BoostException;
 
 }
