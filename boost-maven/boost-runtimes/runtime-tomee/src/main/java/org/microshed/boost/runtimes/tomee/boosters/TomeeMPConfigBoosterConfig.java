@@ -16,8 +16,9 @@ import org.microshed.boost.common.BoostException;
 import org.microshed.boost.common.BoostLoggerI;
 import org.microshed.boost.common.boosters.MPConfigBoosterConfig;
 import org.microshed.boost.common.config.BoosterConfigParams;
+import org.microshed.boost.runtimes.tomee.TomeeServerConfigGenerator;
 
-public class TomeeMPConfigBoosterConfig extends MPConfigBoosterConfig {
+public class TomeeMPConfigBoosterConfig extends MPConfigBoosterConfig implements TomeeBoosterI {
 
     public TomeeMPConfigBoosterConfig(BoosterConfigParams params, BoostLoggerI logger) throws BoostException {
         super(params, logger);
@@ -30,5 +31,9 @@ public class TomeeMPConfigBoosterConfig extends MPConfigBoosterConfig {
         deps.add("org.eclipse.microprofile.config:microprofile-config-api:1.3");
         deps.add("org.osgi:org.osgi.annotation.versioning:1.0.0");
         return deps;
+    }
+
+    @Override
+    public void addServerConfig(TomeeServerConfigGenerator tomeeConfig) {
     }
 }

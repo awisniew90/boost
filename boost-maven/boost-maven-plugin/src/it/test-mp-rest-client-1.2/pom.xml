@@ -207,7 +207,7 @@
                 </property>
             </activation>
             <properties>
-                <!-- https://github.com/dev-tools-for-enterprise-java/boost/issues/349 -->
+                <!-- There is no Rest Client 1.2 implementation for TomEE yet -->
                 <skipITs>true</skipITs>
             </properties>
             <dependencies>

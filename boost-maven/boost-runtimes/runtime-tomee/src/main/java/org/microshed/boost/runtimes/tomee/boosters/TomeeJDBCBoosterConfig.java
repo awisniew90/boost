@@ -14,25 +14,18 @@ import java.util.List;
 
 import org.microshed.boost.common.BoostException;
 import org.microshed.boost.common.BoostLoggerI;
-import org.microshed.boost.common.boosters.MPRestClientBoosterConfig;
+import org.microshed.boost.common.boosters.JDBCBoosterConfig;
 import org.microshed.boost.common.config.BoosterConfigParams;
 import org.microshed.boost.runtimes.tomee.TomeeServerConfigGenerator;
 
-public class TomeeMPRestClientBoosterConfig extends MPRestClientBoosterConfig implements TomeeBoosterI {
+public class TomeeJDBCBoosterConfig extends JDBCBoosterConfig implements TomeeBoosterI {
 
-    public TomeeMPRestClientBoosterConfig(BoosterConfigParams params, BoostLoggerI logger) throws BoostException {
+    public TomeeJDBCBoosterConfig(BoosterConfigParams params, BoostLoggerI logger) throws BoostException {
         super(params, logger);
     }
 
     @Override
-    public List<String> getDependencies() {
-        List<String> deps = super.getDependencies();
-        deps.add("org.apache.cxf:cxf-rt-rs-mp-client:3.2.7");
-        deps.add("org.eclipse.microprofile.rest.client:microprofile-rest-client-api:1.1");
-        return deps;
-    }
-
-    @Override
-    public void addServerConfig(TomeeServerConfigGenerator tomeeConfig) {
+    public void addServerConfig(TomeeServerConfigGenerator tomeeConfig) throws Exception {
+        tomeeConfig.addDataSource(getDriverInfo(), getDatasourceProperties());
     }
 }

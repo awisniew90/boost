@@ -76,13 +76,6 @@ public class TomeeServerConfigGenerator {
         this.logger = logger;
     }
 
-    public void addServerConfig(AbstractBoosterConfig boosterConfig) throws Exception {
-        if (boosterConfig instanceof JDBCBoosterConfig) {
-            addDataSource(((JDBCBoosterConfig) boosterConfig).getDriverInfo(),
-                    ((JDBCBoosterConfig) boosterConfig).getDatasourceProperties());
-        }
-    }
-
     public void addJarsDirToSharedLoader() throws ParserConfigurationException {
         try {
 
@@ -339,7 +332,7 @@ public class TomeeServerConfigGenerator {
 
     }
 
-    private void addCatalinaProperty(String key, String value) throws IOException {
+    public void addCatalinaProperty(String key, String value) throws IOException {
 
         BufferedWriter output = new BufferedWriter(new FileWriter(configPath + "/" + CATALINA_PROPERTIES, true));
         output.newLine();

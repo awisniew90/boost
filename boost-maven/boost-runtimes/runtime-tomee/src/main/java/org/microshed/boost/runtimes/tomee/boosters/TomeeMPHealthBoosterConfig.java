@@ -16,6 +16,7 @@ import org.microshed.boost.common.BoostException;
 import org.microshed.boost.common.BoostLoggerI;
 import org.microshed.boost.common.boosters.MPHealthBoosterConfig;
 import org.microshed.boost.common.config.BoosterConfigParams;
+import org.microshed.boost.runtimes.tomee.TomeeServerConfigGenerator;
 
 public class TomeeMPHealthBoosterConfig extends MPHealthBoosterConfig implements TomeeBoosterI {
 
@@ -30,5 +31,9 @@ public class TomeeMPHealthBoosterConfig extends MPHealthBoosterConfig implements
         deps.add("org.apache.geronimo:geronimo-health-common:1.0.1");
         deps.add("org.eclipse.microprofile.health:microprofile-health-api:1.0");
         return deps;
+    }
+
+    @Override
+    public void addServerConfig(TomeeServerConfigGenerator tomeeConfig) {
     }
 }

@@ -215,7 +215,7 @@
             </activation>
             <properties>
                 <!-- https://github.com/dev-tools-for-enterprise-java/boost/issues/349 -->
-                <skipITs>true</skipITs>
+                <skipITs>false</skipITs>
             </properties>
             <dependencies>
                 <dependency>

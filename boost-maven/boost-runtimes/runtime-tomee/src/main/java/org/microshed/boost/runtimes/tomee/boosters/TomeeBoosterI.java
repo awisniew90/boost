@@ -12,6 +12,10 @@ package org.microshed.boost.runtimes.tomee.boosters;
 
 import java.util.List;
 
+import org.microshed.boost.runtimes.tomee.TomeeServerConfigGenerator;
+
 public interface TomeeBoosterI {
     public List<String> getDependencies();
+
+    public void addServerConfig(TomeeServerConfigGenerator tomeeConfig) throws Exception;
 }

@@ -87,10 +87,6 @@
     </dependency>
     <dependency>
         <groupId>org.microshed.boost.boosters</groupId>
-        <artifactId>mp-rest-client</artifactId>
-    </dependency>
-    <dependency>
-        <groupId>org.microshed.boost.boosters</groupId>
         <artifactId>mp-health</artifactId>
     </dependency>
 	<!-- Java utility classes -->
@@ -196,7 +192,7 @@
 				</property>
 			</activation>
             <properties>
-                <!-- https://github.com/dev-tools-for-enterprise-java/boost/issues/349 -->
+                <!-- There is no MP 3.0 implementation for TomEE yet -->
                 <skipITs>true</skipITs>
             </properties>
 			<dependencies>

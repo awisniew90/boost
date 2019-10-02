@@ -17,8 +17,9 @@ import org.microshed.boost.common.BoostException;
 import org.microshed.boost.common.BoostLoggerI;
 import org.microshed.boost.common.boosters.MPJWTBoosterConfig;
 import org.microshed.boost.common.config.BoosterConfigParams;
+import org.microshed.boost.runtimes.tomee.TomeeServerConfigGenerator;
 
-public class TomeeMPJWTBoosterConfig extends MPJWTBoosterConfig {
+public class TomeeMPJWTBoosterConfig extends MPJWTBoosterConfig implements TomeeBoosterI {
 
     public TomeeMPJWTBoosterConfig(BoosterConfigParams params, BoostLoggerI logger) throws BoostException {
         super(params, logger);
@@ -31,5 +32,9 @@ public class TomeeMPJWTBoosterConfig extends MPJWTBoosterConfig {
         deps.add("org.apache.geronimo:geronimo-jwt-auth:1.0.3");
         deps.add("org.apache.geronimo:geronimo-security:1.0");
         return deps;
+    }
+
+    @Override
+    public void addServerConfig(TomeeServerConfigGenerator tomeeConfig) {
     }
 }
